@@ -1,0 +1,36 @@
+# make docker compose
+services:
+  food_finder_backend_service:
+    build:
+      context: backend/
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - backend/.env.docker
+    develop:
+      watch:
+        - path: backend/app/
+          action: sync+restart
+          target: /backend/app/
+  # streamlit_app:
+  #   build:
+  #     context: .
+  #     dockerfile: docker/Dockerfile.app
+  #   ports:
+  #     - "8501:8501"
+  #   depends_on:
+  #     - agent_service
+  #   environment:
+  #     - AGENT_URL=http://agent_service
+  #   develop:
+  #     watch:
+  #       - path: client/
+  #         action: sync+restart
+  #         target: /app/client/
+  #       - path: schema/
+  #         action: sync+restart
+  #         target: /app/schema/
+  #       - path: streamlit_app.py
+  #         action: sync+restart
+  #         target: /app/streamlit_app.py

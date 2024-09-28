@@ -6,7 +6,7 @@
 
 ## The Design and Agent Framework
 
-![design](images/agent-graph-design.png)
+![design](images/agent-graph-design.jpg)
 
 In a given thread (conversation) for a compiled LangGraph graph, the state that is passed around in the graph (using LangGraph) not only includes the messages sent by user, agent, and tool, but it also includes a record of what the user has requested. It is important to keep this record, so that all agents have access to the same information (local context) and can make informed decisions and work with the same returned place information. For example, if a user later asks in the conversation "Nevermind, instead of Italian food, we decided we want asian food", then the team supervisor agent could make a new call to the cool, update the lists of valid/invalid places, and adjust the preferences accordingly, and not have to worry about recollecting all other preferences.
 

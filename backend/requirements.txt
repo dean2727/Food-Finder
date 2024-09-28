@@ -1,0 +1,14 @@
+openai
+langchain
+langchain-openai
+langchain-core
+langgraph
+langchainhub
+colorama
+markdown
+langchain-community
+fastapi
+uvicorn
+langgraph-checkpoint-sqlite
+pytest
+python-decouple==3.7
