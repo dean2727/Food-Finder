@@ -1,0 +1,26 @@
+This folder will contain examples of conversations for a given team supervisor system prompt.
+Recall that the supervisor is responsible for performing Google Maps searches and filtering/
+sorting the request/results based on user preferences. Then, (in future state), interacting 
+with the user (human feedback node) and subordinates (likely just a review analyzer) to 
+get to a state of found_place = true.
+
+Each file (tx.json, where x is the system prompt version) will contain conversations in the format:
+{
+    [
+        "supervisor_system_prompt": "<system prompt for version x>",
+        "run_outputs": [
+            {
+                "Human message": "<human message on UI>",
+                "AI message": "<AI message on UI>",
+                "Human message": "<human message on UI>",
+                "AI message": "<AI message on UI>",
+                ...<remaining UI messages>...
+            }
+        ],
+        ...<remaining conversations>...
+    ]
+}
+
+Note: The LLM will remain constant, the LLM temperature will be 0 throughout all test runs,
+the system prompts of the other agents will remain fixed, and the same conversations will be
+run for each prompt, for a fair comparison of system prompts.

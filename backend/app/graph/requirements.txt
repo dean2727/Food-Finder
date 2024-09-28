@@ -1,0 +1,4 @@
+# This is referenced if we utilized LangGraph Studio
+langchain
+langchain-openai
+langchain-core

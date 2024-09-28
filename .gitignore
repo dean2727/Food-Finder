@@ -3,6 +3,12 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+.DS_Store
+
+checkpoints.db
+
+backend/tutorial_stuff/*
+
 # C extensions
 *.so
 

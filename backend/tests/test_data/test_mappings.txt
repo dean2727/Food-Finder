@@ -1,0 +1,4 @@
+ID --> Payload to API --> Test file name
+
+1 --> { 'textQuery': 'Spicy Vegetarian Food in Sydney, Australia'} --> test_1.txt
+2 --> {'textQuery': 'Asian cuisine near me', 'locationBias': {'circle': {'center': {'latitude': 30.320156, 'longitude':  -97.720618}, 'radius': 8046.72}}} --> test_2.txt
