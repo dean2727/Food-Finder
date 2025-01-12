@@ -252,31 +252,11 @@ def test_filter_places_coffee(coffee_preference, scenario):
     # Update the preference with the scenario's minimum ratings
     coffee_preference.desired_minimum_num_ratings = PreferenceWeight(value=scenario["min_ratings"], weight=0.9)
 
-    #qi_austin = next((p for p in places_objects if p.display_name_text == "QI Austin: Modern Asian Kitchen"), None)
-    #print(f"DEBUG: confirming QI Austin: Modern Asian Kitchen doesnt serve coffee: {qi_austin.serves_coffee}")
-
     ranked_places, invalid_places = filter_places(places_objects, coffee_preference)
     
     ranked_places_display_names = [place.display_name_text for place in ranked_places]
     invalid_places_display_names = [place[0].display_name_text for place in invalid_places]
-    
-    print(f"DEBUG: Scenario: {scenario['name']}")
-    # use sets to give us the difference
-    #ranked_places_display_names_set = set(ranked_places_display_names)
-    #expected_ranked_places_display_names_set = set(scenario["ranked"])
-    #invalid_places_display_names_set = set(invalid_places_display_names)
-    #expected_invalid_places_display_names_set = set(scenario["invalid"])
 
-    # print whats in each individual set
-    #print("DEBUG: ranked_places_display_names_set: ", ranked_places_display_names_set)
-    #print("DEBUG: expected_ranked_places_display_names_set: ", expected_ranked_places_display_names_set)
-    #print("DEBUG: invalid_places_display_names_set: ", invalid_places_display_names_set)
-    #print("DEBUG: expected_invalid_places_display_names_set: ", expected_invalid_places_display_names_set)
-    
-    #print("DEBUG: places in expected but not in ranked: ", ranked_places_display_names_set - expected_ranked_places_display_names_set)
-    #print("DEBUG: places in ranked but not in expected: ", expected_ranked_places_display_names_set - ranked_places_display_names_set)
-    #print("DEBUG: places in expected but not in invalid: ", expected_invalid_places_display_names_set - invalid_places_display_names_set)
-    #print("DEBUG: places in invalid but not in expected: ", invalid_places_display_names_set - expected_invalid_places_display_names_set)
     print("DEBUG: ranked_places_display_names: ", ranked_places_display_names)
     print("DEBUG scenario['ranked']: ", scenario["ranked"])
     assert ranked_places_display_names == scenario["ranked"], f"Ranked places mismatch in scenario: {scenario['name']}"

@@ -25,7 +25,6 @@ ENVIRON = "dev"
 
 #set_environment_variables(ENVIRON, "fastapi_dev")
 
-# TODO: fix this
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Construct agent with Sqlite chectkpointer
@@ -45,9 +44,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# TODO: Hook up chatbot-ui with UVICORN_SERVER_HOST:UVICORN_SERVER_PORT/chat/invoke
-#app.include_router(chat.router, prefix="/chat", tags=["chat"])
 
 def _parse_input(user_input: UserInput, user_coordinates: Tuple[float, float] | None) -> Tuple[Dict[str, Any], str]:
     run_id = uuid4()
@@ -78,8 +74,6 @@ def _parse_input(user_input: UserInput, user_coordinates: Tuple[float, float] | 
 
     return kwargs, run_id
 
-# TODO: Add this back to routers
-# TODO: get the frontend to have persistent thread_id
 @app.post("/chat/invoke-with-history")
 async def invoke_with_history(chat_request: ChatRequest):
     agent: CompiledGraph = app.state.agent

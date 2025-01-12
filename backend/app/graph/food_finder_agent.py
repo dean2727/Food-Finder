@@ -111,7 +111,7 @@ def team_supervisor_node(state: AgentState):
 
         place_recommendations_str = format_response_str_from_places(valid_places)
 
-        new_message = AIMessage(content=response.content + "\n\n" + place_recommendations_str)
+        new_message = AIMessage(content=response.content + place_recommendations_str)
 
         return {
             'valid_places': {p.display_name_text: p for p in valid_places},
@@ -209,10 +209,6 @@ def create_initial_state(user_input: str, user_coordinates: Tuple[float, float] 
         "messages": [HumanMessage(content=user_input)],
         "user_coordinates": user_coordinates
     })
-
-# TODO: 
-# - Implement human feedback with the team supervisor
-# - Implement a review analyzer (for a place), that the supervisor can communicate with for more details reviews information
 
 if __name__ == "__main__":
     from app.graph import set_environment_variables_langsmith

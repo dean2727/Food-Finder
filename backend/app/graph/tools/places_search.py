@@ -86,110 +86,7 @@ def calculate_rating_score(place_rating_count: int, user_preference_rating_count
     
     return rating_score * weight_of_user_preference_rating_count
 
-def calculate_place_score(place: Place, user_preferences: UserPreferences) -> float:
-    """ This algorithm will give us a score for a given place, using the response 
-    data from the API and the weights the user has given (or the default weights,
-    if user did not specify that information) """
-    score = 0.0
-    
-    considered_preferences = set(user_preferences.model_dump().keys()) - set(['desired_time_and_stay_duration', 'party_size'])
-
-    for pref, pref_weight in user_preferences.model_dump().items():
-        # If this preference is false or unspecified, or its a preference used only for restrictions, continue
-        if pref == 'desired_time_and_stay_duration' or pref_weight['value'] == False or pref not in considered_preferences:
-            continue
-        match pref:                
-            case "desired_minimum_num_ratings":
-                rating_score = calculate_rating_score(place.user_rating_count, pref_weight['value'], pref_weight['weight'])
-                score += rating_score
-            case "dietary_requests":
-                req_score = 0
-                accomodates_requests = True
-                if "vegan" in pref_weight['value']:
-                    if "vegan" not in place.primary_type_display_name_text.lower():
-                        accomodates_requests = False
-                if "vegetarian" in pref_weight['value']:
-                    if not place.serves_vegetarian_food:
-                        accomodates_requests = False
-                if accomodates_requests:
-                    req_score = 1.0 * pref_weight['weight']
-                score += req_score
-            case "wants_family_friendly":
-                if place.good_for_children:
-                    score += pref_weight['weight']
-            case "wants_childrens_menu":
-                if place.menu_for_children:
-                    score += pref_weight['weight']
-            case "wants_free_parking":
-                parking_dict = {
-                    attr: getattr(place.parking_options, attr)
-                    for attr in place.parking_options.model_fields
-                }
-                num_free_options = 0
-                # More free options -> higher score
-                for k in parking_dict.keys():
-                    if k.startswith("free"):
-                        num_free_options += 1
-                parking_score = 0.25 + (0.25 * num_free_options)
-                parking_score += pref_weight['weight']
-                score += parking_score
-            case "wants_outdoor_seating":
-                if place.outdoor_seating:
-                    score += pref_weight['weight']
-            case "wants_live_music":
-                if place.live_music:
-                    score += pref_weight['weight']
-            case "wants_dessert":
-                if place.serves_dessert:
-                    score += pref_weight['weight']
-            case "wants_beer":
-                if place.serves_beer:
-                    score += pref_weight['weight']
-            case "wants_wine":
-                if place.serves_wine:
-                    score += pref_weight['weight']
-            case "wants_brunch":
-                if place.serves_brunch:
-                    score += pref_weight['weight']
-            case "wants_cocktails":
-                if place.serves_cocktails:
-                    score += pref_weight['weight']
-            case "wants_coffee":
-                if place.serves_coffee:
-                    score += pref_weight['weight']
-
-    # TODO: Add distances (between coordinates) later?
-    return score
-
 def filter_places(places: List[Place], user_preferences: UserPreferences) -> Tuple[List[Place], List[Tuple[Place, str]]]:
-    """ 
-    Given a list of places and a state containing 0 or more user preferences,
-    filter and sort them to best satisfy the user's preferences.
-    A restriction is defined by a preference with a weight of 1.0 (the user needs this to be true).
-    A place is filtered if any of the restrictions are not met.
-    Then, we compute total scores for each place, using the preference weights, and this
-    is used as the sorting criteria.
-    Preferences considered in filtering include:
-    - Desired cuisines
-    - Minimum number of ratings
-    - Dietary requests (e.g. vegetarian, vegan, dairy free)
-    - Family friendly
-    - Childrens menu
-    - Free parking
-    - Party size
-    - Whether the desired time of arrival and stay duration are within opening hours
-    - Whether the place has outdoor seating
-    - Whether the place has live music
-    - Whether the place serves dessert
-    - Whether the place serves beer
-    - Whether the place serves wine
-    - Whether the place serves brunch
-    - Whether the place serves cocktails
-    - Whether the place serves coffee
-    Some of these are booleans, so if false, dont need to consider their weights
-    """
-
-    #logging.debug(f"DEBUG: user_preferences: {user_preferences}")
 
     # First, filter. Grab the preferences with weights of 1.0, which contain non-default (truthy) values
     preferences_with_weight_one = {
@@ -291,9 +188,13 @@ def filter_places(places: List[Place], user_preferences: UserPreferences) -> Tup
     return ranked_places, invalid_places
 
 def get_location_bias(user_coords: Tuple[float, float], preferred_direction: str, desired_max_distance_meters: float) -> Dict[str, Any]:
-    """Get the locationBias parameter for the Google Maps places API.
+    """
+    Get the locationBias parameter for the Google Maps places API.
     This assumes the user has opted in to location sharing.
     There are 2 types of location bias we can use: circle and rectangle.
+    For circle, we use the user's current location as the center and the desired max distance as the radius.
+    For rectangle, it depends on preferred direction. If it is "S", then, the user's current location is the
+    middle of the top edge of the rectange. If it is "NE", then coordinates are the bottom-left corner. And so on.
     Example output for circle:
     {
         "circle": {
@@ -320,7 +221,7 @@ def get_location_bias(user_coords: Tuple[float, float], preferred_direction: str
     """
     location_bias = {}
     if preferred_direction != 'any':
-        # TODO: Implement logic for preferred direction
+        # TODO: Implement logic for preferred direction (rectange)
         pass
     else:
         location_bias['circle'] = {
@@ -331,6 +232,82 @@ def get_location_bias(user_coords: Tuple[float, float], preferred_direction: str
             'radius': desired_max_distance_meters
         }
     return location_bias
+
+def calculate_place_score(place: Place, user_preferences: UserPreferences) -> float:
+    """ This algorithm will give us a score for a given place, using the response 
+    data from the API and the weights the user has given (or the default weights,
+    if user did not specify that information) """
+    score = 0.0
+    
+    considered_preferences = set(user_preferences.model_dump().keys()) - set(['desired_time_and_stay_duration', 'party_size'])
+
+    for pref, pref_weight in user_preferences.model_dump().items():
+        # If this preference is false or unspecified, or its a preference used only for restrictions, continue
+        if pref == 'desired_time_and_stay_duration' or pref_weight['value'] == False or pref not in considered_preferences:
+            continue
+        match pref:                
+            case "desired_minimum_num_ratings":
+                rating_score = calculate_rating_score(place.user_rating_count, pref_weight['value'], pref_weight['weight'])
+                score += rating_score
+            case "dietary_requests":
+                req_score = 0
+                accomodates_requests = True
+                if "vegan" in pref_weight['value']:
+                    if "vegan" not in place.primary_type_display_name_text.lower():
+                        accomodates_requests = False
+                if "vegetarian" in pref_weight['value']:
+                    if not place.serves_vegetarian_food:
+                        accomodates_requests = False
+                if accomodates_requests:
+                    req_score = 1.0 * pref_weight['weight']
+                score += req_score
+            case "wants_family_friendly":
+                if place.good_for_children:
+                    score += pref_weight['weight']
+            case "wants_childrens_menu":
+                if place.menu_for_children:
+                    score += pref_weight['weight']
+            case "wants_free_parking":
+                parking_dict = {
+                    attr: getattr(place.parking_options, attr)
+                    for attr in place.parking_options.model_fields
+                }
+                num_free_options = 0
+                # More free options -> higher score
+                for k in parking_dict.keys():
+                    if k.startswith("free"):
+                        num_free_options += 1
+                parking_score = 0.25 + (0.25 * num_free_options)
+                parking_score += pref_weight['weight']
+                score += parking_score
+            case "wants_outdoor_seating":
+                if place.outdoor_seating:
+                    score += pref_weight['weight']
+            case "wants_live_music":
+                if place.live_music:
+                    score += pref_weight['weight']
+            case "wants_dessert":
+                if place.serves_dessert:
+                    score += pref_weight['weight']
+            case "wants_beer":
+                if place.serves_beer:
+                    score += pref_weight['weight']
+            case "wants_wine":
+                if place.serves_wine:
+                    score += pref_weight['weight']
+            case "wants_brunch":
+                if place.serves_brunch:
+                    score += pref_weight['weight']
+            case "wants_cocktails":
+                if place.serves_cocktails:
+                    score += pref_weight['weight']
+            case "wants_coffee":
+                if place.serves_coffee:
+                    score += pref_weight['weight']
+
+    # TODO: Add distances (between coordinates) later?
+    return score
+
 
 def get_maps_text_search_parameters(state: Dict[str, Any]) -> Dict[str, Any]:
     """Process the current state and perform necessary computations,
