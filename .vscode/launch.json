@@ -1,0 +1,20 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        
+        {
+            "name": "Debug with pipenv uvicorn",
+            "type": "python",
+            "request": "launch",
+            "console": "integratedTerminal",
+            "program": "pipenv",
+            "args": [
+                "run",
+                "uvicorn",
+                "main:app",
+                "--reload"
+            ],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}

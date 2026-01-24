@@ -87,8 +87,71 @@ def calculate_rating_score(place_rating_count: int, user_preference_rating_count
     return rating_score * weight_of_user_preference_rating_count
 
 def filter_places(places: List[Place], user_preferences: UserPreferences) -> Tuple[List[Place], List[Tuple[Place, str]]]:
+    """
+    Filter a list of places based on user preferences.
+
+    Args:
+        places: A list of places to filter.
+        user_preferences: The user's preferences.
+
+    Returns:
+        A tuple containing the filtered list of places and a list of invalid places with reasons.
+    """
+    # Filter by party size
+    places = filter_by_party_size(places, user_preferences.party_size)
+
+    # Filter by dietary requests
+    places = filter_by_dietary_requests(places, user_preferences.dietary_requests)
+
+    # Filter by other preferences
+    places = filter_by_other_preferences(places, user_preferences)
+
+    # Split the places into valid and invalid lists
+    valid_places, invalid_places = split_places(places)
+
+    return valid_places, invalid_places
+
+def filter_by_party_size(places: List[Place], party_size: int) -> List[Place]:
+    """
+    Filter a list of places by party size.
+
+    Args:
+        places: A list of places to filter.
+        party_size: The minimum party size.
+
+    Returns:
+        A list of places that can accommodate the party size.
+    """
+    return [place for place in places if place.good_for_groups and place.max_party_size >= party_size]
+
+def filter_by_dietary_requests(places: List[Place], dietary_requests: str) -> List[Place]:
+    """
+    Filter a list of places by dietary requests.
+
+    Args:
+        places: A list of places to filter.
+        dietary_requests: The dietary requests.
+
+    Returns:
+        A list of places that can accommodate the dietary requests.
+    """
+    # ...
+
+def filter_places(places: List[Place], user_preferences: UserPreferences) -> Tuple[List[Place], List[Tuple[Place, str]]]:
 
     # First, filter. Grab the preferences with weights of 1.0, which contain non-default (truthy) values
+    """
+    Filter a list of places by user preferences.
+
+    First, filter the places by user preferences with weight 1.0. Then, rank the places by their score, which is calculated by the calculate_place_score function.
+
+    Args:
+        places: A list of places to filter.
+        user_preferences: The user preferences.
+
+    Returns:
+        A tuple of two lists. The first list contains the valid places, ranked by their score. The second list contains the invalid places, where each element is a tuple of a place and a string explaining why it is invalid.
+    """
     preferences_with_weight_one = {
         attr: getattr(user_preferences, attr)
         for attr in user_preferences.model_fields
@@ -221,8 +284,51 @@ def get_location_bias(user_coords: Tuple[float, float], preferred_direction: str
     """
     location_bias = {}
     if preferred_direction != 'any':
-        # TODO: Implement logic for preferred direction (rectange)
-        pass
+        match preferred_direction:
+            case "S":
+                location_bias['rectangle'] = {
+                    'low': {
+                        'latitude': user_coords[0],
+                        'longitude': user_coords[1] - desired_max_distance_meters / 111320.0
+                    },
+                    'high': {
+                        'latitude': user_coords[0],
+                        'longitude': user_coords[1] + desired_max_distance_meters / 111320.0
+                    }
+                }
+            case "NE":
+                location_bias['rectangle'] = {
+                    'low': {
+                        'latitude': user_coords[0] - desired_max_distance_meters / 111320.0,
+                        'longitude': user_coords[1] - desired_max_distance_meters / 111320.0
+                    },
+                    'high': {
+                        'latitude': user_coords[0] + desired_max_distance_meters / 111320.0,
+                        'longitude': user_coords[1] + desired_max_distance_meters / 111320.0
+                    }
+                }
+            case "NW":
+                location_bias['rectangle'] = {
+                    'low': {
+                        'latitude': user_coords[0] - desired_max_distance_meters / 111320.0,
+                        'longitude': user_coords[1] - desired_max_distance_meters / 111320.0
+                    },
+                    'high': {
+                        'latitude': user_coords[0] + desired_max_distance_meters / 111320.0,
+                        'longitude': user_coords[1] + desired_max_distance_meters / 111320.0
+                    }
+                }
+            case "SE":
+                location_bias['rectangle'] = {
+                    'low': {
+                        'latitude': user_coords[0] + desired_max_distance_meters / 111320.0,
+                        'longitude': user_coords[1] - desired_max_distance_meters / 111320.0
+                    },
+                    'high': {
+                        'latitude': user_coords[0] - desired_max_distance_meters / 111320.0,
+                        'longitude': user_coords[1] + desired_max_distance_meters / 111320.0
+                    }
+                }
     else:
         location_bias['circle'] = {
             'center': {

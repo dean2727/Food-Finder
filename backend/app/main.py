@@ -10,7 +10,6 @@ import uvicorn
 from langchain_core.messages import HumanMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
-from langgraph.graph.graph import CompiledGraph
 
 from app.schemas import ChatMessage, Feedback, UserInput, StreamInput
 #from app.routers import chat
@@ -76,7 +75,7 @@ def _parse_input(user_input: UserInput, user_coordinates: Tuple[float, float] | 
 
 @app.post("/chat/invoke-with-history")
 async def invoke_with_history(chat_request: ChatRequest):
-    agent: CompiledGraph = app.state.agent
+    agent = app.state.agent
 
     user_location = chat_request.userLocation
     user_location = (user_location.latitude, user_location.longitude)

@@ -1,2 +1,2 @@
 run:
-	cd app/ && pipenv run uvicorn main:app --reload
+	cd app/ && uv run uvicorn main:app --reload

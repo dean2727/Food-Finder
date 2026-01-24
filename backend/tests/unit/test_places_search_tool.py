@@ -257,7 +257,81 @@ def test_filter_places_coffee(coffee_preference, scenario):
     ranked_places_display_names = [place.display_name_text for place in ranked_places]
     invalid_places_display_names = [place[0].display_name_text for place in invalid_places]
 
-    print("DEBUG: ranked_places_display_names: ", ranked_places_display_names)
-    print("DEBUG scenario['ranked']: ", scenario["ranked"])
     assert ranked_places_display_names == scenario["ranked"], f"Ranked places mismatch in scenario: {scenario['name']}"
     assert invalid_places_display_names == scenario["invalid"], f"Invalid places mismatch in scenario: {scenario['name']}"
+
+import pytest
+from backend.app.graph.tools.places_search import get_location_bias
+from typing import Tuple, Dict, Any
+
+def test_get_location_bias_circle():
+    user_coords = (37.7937, -122.3965)
+    preferred_direction = "any"
+    desired_max_distance_meters = 500.0
+    expected_output = {
+        "circle": {
+            "center": {
+                "latitude": 37.7937,
+                "longitude": -122.3965
+            },
+            "radius": 500.0
+        }
+    }
+    assert get_location_bias(user_coords, preferred_direction, desired_max_distance_meters) == expected_output
+
+def test_get_location_bias_rectangle_south():
+    user_coords = (37.7937, -122.3965)
+    preferred_direction = "S"
+    desired_max_distance_meters = 500.0
+    expected_output = {
+        "rectangle": {
+            "low": {
+                "latitude": 37.7937,
+                "longitude": -122.4465
+            },
+            "high": {
+                "latitude": 37.7937,
+                "longitude": -122.3465
+            }
+        }
+    }
+    assert get_location_bias(user_coords, preferred_direction, desired_max_distance_meters) == expected_output
+
+def test_get_location_bias_rectangle_ne():
+    user_coords = (37.7937, -122.3965)
+    preferred_direction = "NE"
+    desired_max_distance_meters = 500.0
+    expected_output = {
+        "rectangle": {
+            "low": {
+                "latitude": 37.6937,
+                "longitude": -122.4465
+            },
+            "high": {
+                "latitude": 37.8937,
+                "longitude": -122.3465
+            }
+        }
+    }
+    assert get_location_bias(user_coords, preferred_direction, desired_max_distance_meters) == expected_output
+
+def test_get_location_bias_invalid_direction():
+    user_coords = (37.7937, -122.3965)
+    preferred_direction = "invalid"
+    desired_max_distance_meters = 500.0
+    with pytest.raises(ValueError):
+        get_location_bias(user_coords, preferred_direction, desired_max_distance_meters)
+
+def test_get_location_bias_invalid_user_coords():
+    user_coords = (None, None)
+    preferred_direction = "any"
+    desired_max_distance_meters = 500.0
+    with pytest.raises(TypeError):
+        get_location_bias(user_coords, preferred_direction, desired_max_distance_meters)
+
+def test_get_location_bias_invalid_desired_max_distance_meters():
+    user_coords = (37.7937, -122.3965)
+    preferred_direction = "any"
+    desired_max_distance_meters = None
+    with pytest.raises(TypeError):
+        get_location_bias(user_coords, preferred_direction, desired_max_distance_meters)
