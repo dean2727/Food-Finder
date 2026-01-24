@@ -4,6 +4,7 @@ from uuid import UUID
 from pydantic import BaseModel
 from typing import List, Union, Dict, Any, Literal
 from uuid import uuid4
+import logging
 
 from langgraph.graph.graph import CompiledGraph
 from langchain_core.runnables import RunnableConfig

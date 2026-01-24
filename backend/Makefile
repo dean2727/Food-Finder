@@ -1,2 +1,2 @@
 run:
-	cd app/ && uv run uvicorn main:app --reload
+	source .env.dev && uv run uvicorn app.main:app --reload

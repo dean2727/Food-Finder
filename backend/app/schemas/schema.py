@@ -295,7 +295,7 @@ class PreferenceWeight(BaseModel):
     """A way to gauge both the value and importance weight of an aspect of the user's
     food/place preference. The weights (for non-default/non-null values, i.e. user-specified
     preferences) are utilized in the sorting algorithm before results are presented to the user."""
-    value: Any
+    value: str | int | float | bool | List[str] | None = None
     '''
     Values for preference weights can be:
     - Need -> 1.0
